@@ -22,7 +22,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 silence_tensorflow()
 
 nlp = spacy.blank('pt')
-MODEL_PATH = "../../models/bert-portuguese-tedtalk2012"
+MODEL_PATH = "models/bert-portuguese-tedtalk2012"
 
 bert_tokenizer = BertTokenizer.from_pretrained(MODEL_PATH)
 
