@@ -13,8 +13,10 @@ import torch
 from nltk.tokenize import wordpunct_tokenize
 from seqeval.metrics import classification_report
 from silence_tensorflow import silence_tensorflow
-from punctuator.simpletransformers import NERModel, NERArgs
+from simpletransformers.ner import NERModel, NERArgs
 from transformers import BertTokenizer
+
+from punctuator.utils import split_in_sentences, tokenize_words, remove_punctuation
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 silence_tensorflow()
@@ -79,74 +81,9 @@ def get_model(model_path,
     )
 
 
-def tokenize_words(text, remove_punctuation=True):
-    """
-    Tokenize words in text
-    :param remove_punctuation:
-    :param text: text to tokenize
-    :param remove_punctuation:  remove punctuation from text
-    :return:  list of tokens
-    """
-    if remove_punctuation:
-        words = [word for word in wordpunct_tokenize(text) if word not in string.punctuation]
-    else:
-        words = wordpunct_tokenize(text)
-    return words
-
-
-def split_in_sentences(text):
-    return list(filter(lambda x: x != '', re.split(r' *[\.\?!][\'"\)\]]* *', text)))
-
-
-def truncate_texts(text, max_seq_length=512, overlap=20):
-    """
-    Truncate sentences to fit into BERT's max_seq_length
-    :param text:  text to truncate
-    :param max_seq_length:  max sequence length
-    :param overlap:  overlap between sentences
-    :return:    list of truncated sentences
-    """
-    texts = []
-
-    tokens = tokenize_words(text)
-
-    bert_tokens = bert_tokenizer.tokenize(text)
-
-    len_text = ((max_seq_length * len(tokens)) // len(bert_tokens)) + 1
-
-    if len(bert_tokens) > max_seq_length:
-        if len(tokens) % max_seq_length != 0:
-            max_seq_length //= 2
-
-        for i in range(0, len(tokens), len_text):
-            slide = 0 if i == 0 else overlap
-            truncated_tokens = tokens[i - slide:i + len_text]
-            texts.append(' '.join(truncated_tokens))
-
-        if len(tokenize_words(texts[-1])) + len(tokenize_words(texts[-2])) < len_text:
-            texts[-2] = texts[-2] + texts[-1]
-            texts.pop()
-
-    else:
-        texts.append(text)
-
-    return texts
-
-
 def split_lines(text):
     paragraphs = text.split('\n')
     return paragraphs
-
-
-def remove_punctuation(text):
-    """
-    Remove punctuation from text
-    :param text: text to remove punctuation from
-    :return:  text without punctuation
-    """
-    text = ' '.join(word for word in wordpunct_tokenize(text)
-                    if word not in string.punctuation)
-    return text
 
 
 def preprocess_text(text):
